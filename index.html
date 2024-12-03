@@ -1,0 +1,347 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Tap Game</title>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .glow-blue {
+            box-shadow: 0 0 10px 2px rgba(52, 152, 219, 0.8);
+        }
+        .glow-red {
+            box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.8);
+        }
+        .glow-gray {
+            box-shadow: 0 0 10px 2px rgba(107, 114, 128, 0.8);
+        }
+        .button-animation {
+            transition: transform 0.1s ease-in-out;
+        }
+        .button-animation:active {
+            transform: scale(1.1);
+        }
+        .circle-animation {
+            transition: transform 0.1s ease-in-out;
+        }
+        .circle-animation:active {
+            transform: scale(0.9);
+        }
+        .bg-animation {
+            animation: bgColorChange 5s infinite alternate;
+        }
+        @keyframes bgColorChange {
+            0% {
+                background-color: #f7fafc; /* bg-gray-100 */
+            }
+            100% {
+                background-color: #ffffff; /* white */
+            }
+        }
+    </style>
+</head>
+<body class="bg-animation flex items-center justify-center h-screen" oncontextmenu="return false;">
+    <div id="main-menu" class="flex flex-col items-center space-y-4 z-10">
+        <h1 class="text-4xl font-bold text-gray-800">Circle Tap Game</h1>
+        <div id="best-score" class="text-2xl text-gray-800"></div>
+        <button id="play-button" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Play</button>
+        <button id="settings-button" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Settings</button>
+        <button id="score-button" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Score</button>
+        <button id="exit-button" class="bg-red-500 text-white px-6 py-2 rounded-full text-lg glow-red button-animation">Exit</button>
+    </div>
+
+    <div id="difficulty-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Select Difficulty</h2>
+        <button class="difficulty-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-difficulty="easy">Easy</button>
+        <button class="difficulty-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-difficulty="medium">Medium</button>
+        <button class="difficulty-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-difficulty="hard">Hard</button>
+        <button id="back-to-main-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Back</button>
+    </div>
+
+    <div id="time-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Select Game Time</h2>
+        <button class="time-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-time="30">30 Seconds</button>
+        <button class="time-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-time="60">60 Seconds</button>
+        <button class="time-button bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation" data-time="120">120 Seconds</button>
+        <button id="back-to-difficulty-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Back</button>
+    </div>
+
+    <div id="game-container" class="hidden relative w-full h-full overflow-hidden">
+        <div id="score" class="absolute top-2 left-2 text-2xl text-gray-800 z-10">Score: 0</div>
+        <div id="timer" class="absolute top-2 right-2 text-2xl text-gray-800 z-10">Time: 30</div>
+        <button id="pause-button" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-gray-500 text-white px-4 py-2 rounded-full text-lg glow-gray button-animation z-10">Pause</button>
+    </div>
+
+    <div id="pause-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Paused</h2>
+        <button id="resume-button" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Resume</button>
+        <button id="pause-main-menu-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Main Menu</button>
+    </div>
+
+    <div id="settings-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Settings</h2>
+        <button id="glow-toggle" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Disable Glow Effect</button>
+        <button id="button-glow-toggle" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Disable Button Glow</button>
+        <button id="back-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Back</button>
+    </div>
+
+    <div id="game-over-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Game Over</h2>
+        <div id="final-score" class="text-2xl text-gray-800">Your Score: 0</div>
+        <div id="final-best-score" class="text-2xl text-gray-800">Best Score: 0</div>
+        <button id="retry-button" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Retry</button>
+        <button id="menu-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Menu</button>
+    </div>
+
+    <div id="score-menu" class="hidden flex flex-col items-center space-y-4 z-10">
+        <h2 class="text-3xl font-bold text-gray-800">Best Score Details</h2>
+        <button id="best-score-details" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Best Score: 107</button>
+        <button id="best-score-time" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Time: 60</button>
+        <button id="best-score-difficulty" class="bg-blue-500 text-white px-6 py-2 rounded-full text-lg glow-blue button-animation">Difficulty: easy</button>
+        <button id="score-back-button" class="bg-gray-500 text-white px-6 py-2 rounded-full text-lg glow-gray button-animation">Back</button>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        const mainMenu = document.getElementById('main-menu');
+        const difficultyMenu = document.getElementById('difficulty-menu');
+        const timeMenu = document.getElementById('time-menu');
+        const gameContainer = document.getElementById('game-container');
+        const pauseMenu = document.getElementById('pause-menu');
+        const settingsMenu = document.getElementById('settings-menu');
+        const gameOverMenu = document.getElementById('game-over-menu');
+        const scoreMenu = document.getElementById('score-menu');
+        const playButton = document.getElementById('play-button');
+        const settingsButton = document.getElementById('settings-button');
+        const exitButton = document.getElementById('exit-button');
+        const backToMainButton = document.getElementById('back-to-main-button');
+        const backToDifficultyButton = document.getElementById('back-to-difficulty-button');
+        const backButton = document.getElementById('back-button');
+        const retryButton = document.getElementById('retry-button');
+        const menuButton = document.getElementById('menu-button');
+        const pauseButton = document.getElementById('pause-button');
+        const resumeButton = document.getElementById('resume-button');
+        const pauseMainMenuButton = document.getElementById('pause-main-menu-button');
+        const scoreButton = document.getElementById('score-button');
+        const scoreBackButton = document.getElementById('score-back-button');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const glowToggle = document.getElementById('glow-toggle');
+        const buttonGlowToggle = document.getElementById('button-glow-toggle');
+        const bestScoreDisplay = document.getElementById('best-score');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalBestScoreDisplay = document.getElementById('final-best-score');
+        const bestScoreDetails = document.getElementById('best-score-details');
+        const bestScoreTime = document.getElementById('best-score-time');
+        const bestScoreDifficulty = document.getElementById('best-score-difficulty');
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let timerInterval;
+        const maxCircles = 3;
+        let glowEnabled = JSON.parse(localStorage.getItem('glowEnabled')) ?? true;
+        let buttonGlowEnabled = JSON.parse(localStorage.getItem('buttonGlowEnabled')) ?? true;
+        let selectedDifficulty = 'easy';
+        let selectedTime = 30;
+        let bestScore = JSON.parse(localStorage.getItem('bestScore')) ?? 0;
+        let bestScoreTimeValue = JSON.parse(localStorage.getItem('bestScoreTime')) ?? 0;
+        let bestScoreDifficultyValue = localStorage.getItem('bestScoreDifficulty') ?? 'easy';
+        let isPaused = false;
+
+        bestScoreDisplay.textContent = `Best Score: ${bestScore}`;
+
+        function getRandomPosition() {
+            const x = Math.floor(Math.random() * (gameContainer.clientWidth - 50));
+            const y = Math.floor(Math.random() * (gameContainer.clientHeight - 50));
+            return { x, y };
+        }
+
+        function createCircle() {
+            if (gameContainer.getElementsByClassName('circle').length < maxCircles) {
+                const circle = document.createElement('div');
+                circle.classList.add('circle', 'absolute', 'w-12', 'h-12', 'bg-blue-500', 'rounded-full', 'flex', 'items-center', 'justify-center', 'text-white', 'text-lg', 'cursor-pointer', 'glow-blue', 'circle-animation');
+                const { x, y } = getRandomPosition();
+                circle.style.left = `${x}px`;
+                circle.style.top = `${y}px`;
+                circle.addEventListener('click', () => {
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    gameContainer.removeChild(circle);
+                    createCircle();
+                });
+                gameContainer.appendChild(circle);
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            timeLeft = selectedTime;
+            scoreDisplay.textContent = `Score: ${score}`;
+            timerDisplay.textContent = `Time: ${timeLeft}`;
+            createCircle();
+            gameInterval = setInterval(createCircle, selectedDifficulty === 'easy' ? 1500 : selectedDifficulty === 'medium' ? 1000 : 500);
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--;
+                    timerDisplay.textContent = `Time: ${timeLeft}`;
+                    if (timeLeft <= 0) {
+                        clearInterval(gameInterval);
+                        clearInterval(timerInterval);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestScoreTimeValue = selectedTime;
+                            bestScoreDifficultyValue = selectedDifficulty;
+                            localStorage.setItem('bestScore', bestScore);
+                            localStorage.setItem('bestScoreTime', bestScoreTimeValue);
+                            localStorage.setItem('bestScoreDifficulty', bestScoreDifficultyValue);
+                            bestScoreDisplay.textContent = `Best Score: ${bestScore}`;
+                        }
+                        finalScoreDisplay.textContent = `Your Score: ${score}`;
+                        finalBestScoreDisplay.textContent = `Best Score: ${bestScore}`;
+                        gameOverMenu.classList.remove('hidden');
+                        gameContainer.classList.add('hidden');
+                    }
+                }
+            }, 1000);
+        }
+
+        playButton.addEventListener('click', () => {
+            mainMenu.classList.add('hidden');
+            difficultyMenu.classList.remove('hidden');
+        });
+
+        document.querySelectorAll('.difficulty-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                selectedDifficulty = event.target.getAttribute('data-difficulty');
+                difficultyMenu.classList.add('hidden');
+                timeMenu.classList.remove('hidden');
+            });
+        });
+
+        document.querySelectorAll('.time-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                selectedTime = parseInt(event.target.getAttribute('data-time'));
+                timeMenu.classList.add('hidden');
+                gameContainer.classList.remove('hidden');
+                startGame();
+            });
+        });
+
+        settingsButton.addEventListener('click', () => {
+            mainMenu.classList.add('hidden');
+            settingsMenu.classList.remove('hidden');
+        });
+
+        exitButton.addEventListener('click', () => {
+            window.close();
+        });
+
+        backToMainButton.addEventListener('click', () => {
+            difficultyMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        });
+
+        backToDifficultyButton.addEventListener('click', () => {
+            timeMenu.classList.add('hidden');
+            difficultyMenu.classList.remove('hidden');
+        });
+
+        backButton.addEventListener('click', () => {
+            settingsMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        });
+
+        retryButton.addEventListener('click', () => {
+            gameOverMenu.classList.add('hidden');
+            difficultyMenu.classList.remove('hidden');
+        });
+
+        menuButton.addEventListener('click', () => {
+            gameOverMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        });
+
+        pauseButton.addEventListener('click', () => {
+            isPaused = true;
+            pauseMenu.classList.remove('hidden');
+            gameContainer.classList.add('hidden');
+        });
+
+        resumeButton.addEventListener('click', () => {
+            isPaused = false;
+            pauseMenu.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+        });
+
+        pauseMainMenuButton.addEventListener('click', () => {
+            pauseMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        });
+
+        scoreButton.addEventListener('click', () => {
+            bestScoreDetails.textContent = `Best Score: ${bestScore}`;
+            bestScoreTime.textContent = `Time: ${bestScoreTimeValue}`;
+            bestScoreDifficulty.textContent = `Difficulty: ${bestScoreDifficultyValue}`;
+            mainMenu.classList.add('hidden');
+            scoreMenu.classList.remove('hidden');
+        });
+
+        scoreBackButton.addEventListener('click', () => {
+            scoreMenu.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        });
+
+        glowToggle.addEventListener('click', () => {
+            glowEnabled = !glowEnabled;
+            localStorage.setItem('glowEnabled', glowEnabled);
+            glowToggle.textContent = glowEnabled ? 'Disable Glow Effect' : 'Enable Glow Effect';
+        });
+
+        buttonGlowToggle.addEventListener('click', () => {
+            buttonGlowEnabled = !buttonGlowEnabled;
+            localStorage.setItem('buttonGlowEnabled', buttonGlowEnabled);
+            document.querySelectorAll('button').forEach(button => {
+                if (buttonGlowEnabled) {
+                    if (button.classList.contains('bg-blue-500')) {
+                        button.classList.add('glow-blue');
+                    } else if (button.classList.contains('bg-red-500')) {
+                        button.classList.add('glow-red');
+                    } else if (button.classList.contains('bg-gray-500')) {
+                        button.classList.add('glow-gray');
+                    }
+                } else {
+                    button.classList.remove('glow-blue', 'glow-red', 'glow-gray');
+                }
+            });
+            buttonGlowToggle.textContent = buttonGlowEnabled ? 'Disable Button Glow' : 'Enable Button Glow';
+        });
+
+        // Initialize settings
+        if (glowEnabled) {
+            glowToggle.textContent = 'Disable Glow Effect';
+        } else {
+            glowToggle.textContent = 'Enable Glow Effect';
+        }
+
+        if (buttonGlowEnabled) {
+            buttonGlowToggle.textContent = 'Disable Button Glow';
+        } else {
+            buttonGlowToggle.textContent = 'Enable Button Glow';
+            document.querySelectorAll('button').forEach(button => {
+                button.classList.remove('glow-blue', 'glow-red', 'glow-gray');
+            });
+        }
+    </script>
+</body>
+</html>
